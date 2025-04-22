@@ -284,24 +284,47 @@ func main() {
 func extractFFmpeg() error {
 	// 创建ffmpeg目录
 	if err := os.MkdirAll("ffmpeg", 0755); err != nil {
-		return err
+		return fmt.Errorf("创建ffmpeg目录失败: %v", err)
 	}
 
 	// 解压ffmpeg文件
 	files, err := ffmpegFiles.ReadDir("ffmpeg")
 	if err != nil {
-		return err
+		return fmt.Errorf("读取嵌入的ffmpeg文件失败: %v", err)
+	}
+
+	if len(files) == 0 {
+		return fmt.Errorf("没有找到嵌入的ffmpeg文件")
+	}
+
+	// 检查必需的文件是否存在
+	requiredFiles := map[string]bool{
+		"ffmpeg.exe":  false,
+		"ffprobe.exe": false,
+	}
+
+	for _, file := range files {
+		requiredFiles[file.Name()] = true
+	}
+
+	// 检查是否缺少必需文件
+	for file, found := range requiredFiles {
+		if !found {
+			return fmt.Errorf("缺少必需文件: %s", file)
+		}
 	}
 
 	for _, file := range files {
 		data, err := ffmpegFiles.ReadFile("ffmpeg/" + file.Name())
 		if err != nil {
-			return err
+			return fmt.Errorf("读取文件 %s 失败: %v", file.Name(), err)
 		}
 
-		if err := os.WriteFile("ffmpeg/"+file.Name(), data, 0755); err != nil {
-			return err
+		outputPath := filepath.Join("ffmpeg", file.Name())
+		if err := os.WriteFile(outputPath, data, 0755); err != nil {
+			return fmt.Errorf("写入文件 %s 失败: %v", outputPath, err)
 		}
+		fmt.Printf("已解压: %s\n", file.Name())
 	}
 
 	return nil

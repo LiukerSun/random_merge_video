@@ -10,8 +10,23 @@ if not exist ffmpeg\ffmpeg.exe (
     exit /b 1
 )
 
+if not exist ffmpeg\ffprobe.exe (
+    echo 错误：ffprobe.exe文件不存在！
+    echo 请从ffmpeg官网下载Windows版本的ffmpeg，并将以下文件放入ffmpeg目录中：
+    echo - ffmpeg.exe
+    echo - ffprobe.exe
+    pause
+    exit /b 1
+)
+
 echo 正在编译程序...
 go build -o video_combiner.exe main.go
+if errorlevel 1 (
+    echo 编译失败！
+    pause
+    exit /b 1
+)
+
 echo 编译完成！
 echo.
 echo 使用方法：
